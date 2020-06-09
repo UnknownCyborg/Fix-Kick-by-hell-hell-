@@ -10,10 +10,17 @@
 #endif
 #define _fix_included
 //======================================================================
-#if defined DELAY_KICK
-	#undef DELAY_KICK
+#if !defined DELAY_KICK
+	#define DELAY_KICK 1250
 #endif
-#define DELAY_KICK 1250
+
+#if !defined MESSAGE_KICK
+	#define MESSAGE_KICK
+#endif
+
+#if !defined KICK_STAT
+	#define KICK_STAT
+#endif
 //======================================================================
 static bool:PlayerKicked[MAX_PLAYERS];
 static FIX_Total_Kick;
@@ -40,7 +47,6 @@ public OnPlayerConnect(playerid)
 public OnGameModeInit()
 {
 	print(!"Fix Kick by hell'hell loaded!");
-	print(!":))");
 	#if defined FIX_OnGameModeInit
 		return FIX_OnGameModeInit();
 	#else
@@ -59,9 +65,13 @@ public OnGameModeInit()
 
 public OnGameModeExit()
 {
-	print(!"_______________________");
-	printf("- Total Kick's [%d]!   ", FIX_Total_Kick);
-	print(!"_______________________");
+	#if defined KICK_STAT
+		print(!"------------------------");
+		printf("---Total Kick's [%d]!---", FIX_Total_Kick);
+		print(!"------------------------");
+	#else 
+		#pragma unused FIX_Total_Kick
+	#endif
 	#if defined FIX_OnGameModeExit
 		return FIX_OnGameModeExit();
 	#else
@@ -84,7 +94,15 @@ stock fix_kick(targetid, delay = DELAY_KICK)
 	if(!PlayerKicked[targetid])
 	{
 		PlayerKicked[targetid] = true;
-		FIX_Total_Kick++;
+		#if defined KICK_STAT
+			FIX_Total_Kick++;
+		#endif
+		#if defined MESSAGE_KICK
+			new fix_string[62], fix_year, fix_month, fix_day, fix_hour, fix_minute, fix_second;
+			getdate(fix_year, fix_month, fix_day), gettime(fix_hour, fix_minute, fix_second);
+			format(fix_string, sizeof(fix_string), "Соединение с сервером потеряно! [%02d/%02d/%02d] [%02d:%02d:%02d]", fix_year, fix_month, fix_day, fix_hour, fix_minute, fix_second);
+			SendClientMessage(targetid, -1, fix_string);
+		#endif
 		return SetTimerEx(!"KickPlayer", delay, false, !"d", targetid);
 	}
 	return false;
